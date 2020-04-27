@@ -1,0 +1,26 @@
+<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">
+  <Instrument ID="Instrument:0">
+    <Objective ID="Objective:0:0" NominalMagnification="40.0"/>
+  </Instrument>
+  <Image ID="Image:0" Name="${image['name']}">
+    <AcquisitionDate>${image['acquisitionDate']}</AcquisitionDate>
+    <Description>${image['description']}</Description>
+    <InstrumentRef ID="Instrument:0"/>
+    <ObjectiveSettings ID="Objective:0:0"/>
+    <Pixels BigEndian="false" DimensionOrder="XYCZT" ID="Pixels:0"
+            Interleaved="false"
+            PhysicalSizeX="${image['pixels']['physicalSizeX']}"
+            PhysicalSizeXUnit="µm"
+            PhysicalSizeY="${image['pixels']['physicalSizeY']}"
+            PhysicalSizeYUnit="µm" SignificantBits="8"
+            SizeC="3" SizeT="1"
+            SizeX="${image['pixels']['sizeX']}"
+            SizeY="${image['pixels']['sizeY']}"
+            SizeZ="1" Type="uint8">
+      <Channel ID="Channel:0:0" SamplesPerPixel="3">
+        <LightPath/>
+      </Channel>
+      <MetadataOnly/>
+    </Pixels>
+  </Image>
+</OME>
