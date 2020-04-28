@@ -2,7 +2,13 @@
 
 # TIFF Converter
 
-Python tool that converts TIFF files to an intermediary raw format.
+Python tool that converts TIFF files, using the `tifffile` package, to an
+intermediary raw format.
+
+__WARNING:__ This package is __EXPERIMENTAL__ and is not meant to be an
+alternative to `bioformats2raw` for TIFF files.  __ALL__ metadata present
+in the input TIFF file is currently lost.  __ALL__ pixel data present
+in the original TIFF file is loaded into RAM.
 
 ## Requirements
 
