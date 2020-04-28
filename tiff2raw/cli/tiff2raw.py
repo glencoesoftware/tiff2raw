@@ -66,6 +66,7 @@ def write_tiles(
         tile_width, tile_height, resolutions, file_type, max_workers,
         dimension_order, input_path, output_path
     ) as wt:
+        wt.write_metadata()
         wt.write_tiles()
 
 
