@@ -106,7 +106,7 @@ class WriteTiles(object):
     def write_metadata(self):
         '''write metadata to a OME-XML file'''
 
-        timestamp = datetime.datetime.now()  # TODO
+        timestamp = datetime.now()  # TODO
         ome_timestamp = datetime.strptime(timestamp, "%Y%m%d%H%M%S.%f")
 
         xml_values = {
