@@ -12,11 +12,14 @@
             PhysicalSizeX="${image['pixels']['physicalSizeX']}"
             PhysicalSizeXUnit="µm"
             PhysicalSizeY="${image['pixels']['physicalSizeY']}"
-            PhysicalSizeYUnit="µm" SignificantBits="8"
-            SizeC="3" SizeT="1"
+            PhysicalSizeYUnit="µm"
+            SignificantBits="${image['pixels']['significantBits']}"
             SizeX="${image['pixels']['sizeX']}"
             SizeY="${image['pixels']['sizeY']}"
-            SizeZ="1" Type="uint8">
+            SizeC="${image['pixels']['sizeC']}"
+            SizeZ="${image['pixels']['sizeZ']}"
+            SizeT="${image['pixels']['sizeT']}"
+            Type="${image['pixels']['type']}">
       <Channel ID="Channel:0:0" SamplesPerPixel="3">
         <LightPath/>
       </Channel>

@@ -36,6 +36,25 @@ PYRAMID_SCALE = 2
 LAYOUT = 1
 
 
+def to_ome(dtype):
+    if dtype == np.int8:
+        return 'int8'
+    if dtype == np.uint8:
+        return 'uint8'
+    if dtype == np.int16:
+        return 'int16'
+    if dtype == np.uint16:
+        return 'uint16'
+    if dtype == np.int32:
+        return 'int32'
+    if dtype == np.uint32:
+        return 'uint32'
+    if dtype == np.float:
+        return 'float'
+    if dtype == np.double:
+        return 'double'
+
+
 class MaxQueuePool(object):
     """This Class wraps a concurrent.futures.Executor
     limiting the size of its task queue.
@@ -98,6 +117,11 @@ class WriteTiles(object):
 
     def __enter__(self):
         self.input = imread(self.input_path)
+        # shape may be truncated
+        self.input = self.input.reshape(
+            ((1,) * (5 - len(self.input.shape))) + self.input.shape
+        )
+        self.plane_count = np.prod(self.input.shape[0:-2])
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
@@ -105,7 +129,8 @@ class WriteTiles(object):
 
     def write_metadata(self):
         '''write metadata to a OME-XML file'''
-
+        # numpy dimension order is reversed
+        dimension_order = self.dimension_order[::-1]
         timestamp = datetime.now()  # TODO
         xml_values = {
             'image': {
@@ -113,10 +138,15 @@ class WriteTiles(object):
                 'acquisitionDate': timestamp.isoformat(),
                 'description': "",  # TODO
                 'pixels': {
-                    'sizeX': self.input.shape[-1],
-                    'sizeY': self.input.shape[-2],
+                    'significantBits': self.input.itemsize * 8,
+                    'sizeX': self.input.shape[dimension_order.index('X')],
+                    'sizeY': self.input.shape[dimension_order.index('Y')],
+                    'sizeC': self.input.shape[dimension_order.index('C')],
+                    'sizeZ': self.input.shape[dimension_order.index('Z')],
+                    'sizeT': self.input.shape[dimension_order.index('T')],
                     'physicalSizeX': 1,  # TODO
-                    'physicalSizeY': 1   # TODO
+                    'physicalSizeY': 1,  # TODO
+                    'type': to_ome(self.input.dtype),
                 }
             },
         }
@@ -135,13 +165,13 @@ class WriteTiles(object):
         if self.file_type == "n5":
             self.zarr_store = zarr.N5Store(tile_directory)
         self.zarr_group = zarr.group(store=self.zarr_store)
-        shape = ([1] * (5 - len(self.input.shape))) + list(self.input.shape)
         # numpy dimension order is reversed
         dimension_order = self.dimension_order[::-1]
+        shape = list(self.input.shape[0:-2]) + [1, 1]
         shape[dimension_order.index('X')] = width
         shape[dimension_order.index('Y')] = height
         self.zarr_group.create_dataset(
-            '0/%d' % resolution, shape=shape,
+            '0/%d' % resolution, shape=tuple(shape),
             chunks=(1, 1, 1, self.tile_height, self.tile_width),
             dtype=self.input.dtype,
         )
@@ -233,14 +263,13 @@ class WriteTiles(object):
         z = self.zarr_group['0/%d' % resolution]
         # numpy dimension order is reversed
         dimension_order = self.dimension_order[::-1]
-        plane_count = np.prod(self.input.shape[0:-2])
         z_index = dimension_order.index('Z')
         c_index = dimension_order.index('C')
         t_index = dimension_order.index('T')
         zct = self.get_zct_coords(
             self.dimension_order,
             z.shape[z_index], z.shape[c_index], z.shape[t_index],
-            plane_count, plane
+            self.plane_count, plane
         )
         indexes = [0, 0, 0]
         indexes[z_index] = zct[0]
@@ -254,7 +283,6 @@ class WriteTiles(object):
         size_y = self.input.shape[-2]
         # numpy dimension order is reversed
         dimension_order = self.dimension_order[::-1]
-        plane_count = np.prod(self.input.shape[0:-2])
         if self.resolutions is None:
             resolutions = 0
             width = size_x
@@ -314,8 +342,7 @@ class WriteTiles(object):
                 )
 
         log.debug("Input shape %s" % repr(self.input.shape))
-        input = self.input.reshape(self.zarr_group['0/0'].shape)
-        log.debug("Input reshaped to %s" % repr(input.shape))
+        input = self.input
         for resolution in resolutions:
             dataset = self.zarr_group['0/%d' % resolution]
             resolution_x_size = dataset.shape[dimension_order.index('X')]
@@ -329,7 +356,7 @@ class WriteTiles(object):
 
             jobs = []
             with MaxQueuePool(ThreadPoolExecutor, self.max_workers) as pool:
-                for plane in range(0, plane_count):
+                for plane in range(0, self.plane_count):
                     for y_start in range(
                         0, resolution_y_size, self.tile_height
                     ):
