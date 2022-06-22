@@ -80,7 +80,7 @@ setup(name='tiff2raw',
       setup_requires=['flake8'],
       install_requires=[
           'click==7.0',
-          'numpy==1.17.3',
+          'numpy==1.22.0',
           'tifffile==2019.7.26',
           'zarr==2.4.0',
           'kajiki==0.8.2',
